@@ -1,0 +1,27 @@
+# Node
+node_modules/
+dist/
+
+# Environment files
+.env
+.env.*
+
+# Java / Maven
+target/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Eclipse / STS
+.classpath
+.project
+.settings/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
