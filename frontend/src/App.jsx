@@ -1,18 +1,18 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+
 import './App.css'
-import Sidebar from './components/Sidebar'
+import { Typography } from "@mui/material";
+import MainLayout from './components/layout/MainLayout'
+import Dashboard from './pages/Dashboard/Dashboard';
+
+
 
 function App() {
   
   return (
-    <>
-     <Sidebar/>
-    </>
-   
-  )
+     <MainLayout>
+      <Dashboard/>
+    </MainLayout>
+  );
 }
 
 export default App;
