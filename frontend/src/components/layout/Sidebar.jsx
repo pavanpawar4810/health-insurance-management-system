@@ -19,7 +19,7 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import LogoutIcon from "@mui/icons-material/Logout";
-
+import { NavLink } from "react-router-dom";
 const drawerWidth = 240;
 
 function Sidebar() {
@@ -27,34 +27,42 @@ function Sidebar() {
     {
       text: "Dashboard",
       icon: <DashboardIcon />,
+      path: "/dashboard",
     },
     {
-      text: "Customer",
+      text: "Customers",
       icon: <PeopleIcon />,
+      path: "/customers",
     },
     {
       text: "Policies",
       icon: <PolicyIcon />,
+      path: "/policies",
     },
     {
       text: "Claims",
       icon: <ClaimsIcon />,
+      path: "/claims",
     },
     {
       text: "Payments",
       icon: <PaymentIcon />,
+      path: "/payments",
     },
     {
       text: "Notifications",
       icon: <NotificationsIcon />,
+      path: "/notifications",
     },
     {
       text: "Reports",
       icon: <AssessmentIcon />,
+      path: "/reports",
     },
     {
       text: "Admin",
       icon: <AdminPanelSettingsIcon />,
+      path: "/admin",
     },
   ];
 
@@ -85,8 +93,13 @@ function Sidebar() {
       <List>
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
-            <ListItemButton>
-              <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemButton
+              component={NavLink}
+              to={item.path}
+            >
+              <ListItemIcon>
+                {item.icon}
+              </ListItemIcon>
 
               <ListItemText primary={item.text} />
             </ListItemButton>

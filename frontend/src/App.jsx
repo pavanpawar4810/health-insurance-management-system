@@ -1,17 +1,15 @@
+import { BrowserRouter } from "react-router-dom";
 
-import './App.css'
-import { Typography } from "@mui/material";
-import MainLayout from './components/layout/MainLayout'
-import Dashboard from './pages/Dashboard/Dashboard';
-
-
+import MainLayout from "./components/layout/MainLayout";
+import AppRoutes from "./routes/AppRoutes";
 
 function App() {
-  
   return (
-     <MainLayout>
-      <Dashboard/>
-    </MainLayout>
+    <BrowserRouter>
+      <MainLayout>
+        <AppRoutes />
+      </MainLayout>
+    </BrowserRouter>
   );
 }
 

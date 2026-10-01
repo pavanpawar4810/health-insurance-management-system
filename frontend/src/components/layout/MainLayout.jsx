@@ -1,4 +1,3 @@
-
 import { Box, Toolbar } from "@mui/material";
 
 import Sidebar from "./Sidebar";
@@ -9,7 +8,7 @@ const drawerWidth = 240;
 function MainLayout({ children }) {
   return (
     <Box sx={{ display: "flex" }}>
-      
+
       <Navbar />
 
       <Sidebar />
