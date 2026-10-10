@@ -1,0 +1,25 @@
+server:
+  port: 9092
+
+spring:
+  application:
+    name: apigateway
+
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: customer-service
+              uri: lb://customer-service
+              predicates:
+                - Path=/api/v1/customers,/api/v1/customers/**
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
