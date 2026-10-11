@@ -14,6 +14,8 @@ import {
   Chip,
   IconButton,
   InputAdornment,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 
 import AddIcon from "@mui/icons-material/Add";
@@ -21,65 +23,134 @@ import SearchIcon from "@mui/icons-material/Search";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useNavigate } from "react-router-dom";
 
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+
+import { getAllCustomer } from "../../components/services/customerService";
 
 function CustomersList() {
+  const navigate = useNavigate();
 
-  const navigate=useNavigate();
-  const customers = [
-    {
-      id: "CUS001",
-      name: "Rahul Patil",
-      email: "rahul.patil@gmail.com",
-      phone: "9876543210",
-      policy: "Health Plus",
-      status: "Active",
-    },
-    {
-      id: "CUS002",
-      name: "Amit Sharma",
-      email: "amit.sharma@gmail.com",
-      phone: "9876543211",
-      policy: "Family Care",
-      status: "Active",
-    },
-    {
-      id: "CUS003",
-      name: "Sneha Joshi",
-      email: "sneha.joshi@gmail.com",
-      phone: "9876543212",
-      policy: "Senior Care",
-      status: "Inactive",
-    },
-    {
-      id: "CUS004",
-      name: "Priya Deshmukh",
-      email: "priya.deshmukh@gmail.com",
-      phone: "9876543213",
-      policy: "Health Plus",
-      status: "Active",
-    },
-    {
-      id: "CUS005",
-      name: "Rohit Kulkarni",
-      email: "rohit.kulkarni@gmail.com",
-      phone: "9876543214",
-      policy: "Family Care",
-      status: "Active",
-    },
-  ];
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [keyword, setKeyword] = useState("");
+
+  // Fetch customers from backend
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await getAllCustomer();
+
+        console.log("API Response:", response.data);
+
+        // Handle both array response and { data: [...] } response
+        const result = Array.isArray(response.data)
+          ? response.data
+          : Array.isArray(response.data?.data)
+            ? response.data.data
+            : [];
+
+        setCustomers(result);
+      } catch (err) {
+        console.error("Error fetching customers:", err);
+        setError("Unable to load customers from backend.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCustomers();
+  }, []);
+
+  // Search customers by code, name, email or phone
+  const filteredCustomers = customers.filter((customer) => {
+    const searchText = keyword.trim().toLowerCase();
+
+    const customerCode =
+      customer.customerCode ?? customer.customer_code ?? "";
+
+    const firstName =
+      customer.firstName ?? customer.first_name ?? "";
+
+    const lastName =
+      customer.lastName ?? customer.last_name ?? "";
+
+    const fullName =
+      customer.name ?? `${firstName} ${lastName}`.trim();
+
+    const email = customer.email ?? "";
+
+    const phone =
+      customer.phone ?? customer.phoneNumber ?? customer.phone_number ?? "";
+
+    return [
+      customerCode,
+      fullName,
+      email,
+      phone,
+    ].some((value) =>
+      String(value ?? "").toLowerCase().includes(searchText)
+    );
+  });
+
+  // Get customer fields for display
+  const getCustomerCode = (customer) =>
+    customer.customerCode ??
+    customer.customer_code ??
+    customer.id ??
+    "-";
+
+  const getCustomerName = (customer) => {
+    if (customer.name) {
+      return customer.name;
+    }
+
+    const firstName =
+      customer.firstName ?? customer.first_name ?? "";
+
+    const lastName =
+      customer.lastName ?? customer.last_name ?? "";
+
+    return `${firstName} ${lastName}`.trim() || "-";
+  };
+
+  const getCustomerPhone = (customer) =>
+    customer.phone ??
+    customer.phoneNumber ??
+    customer.phone_number ??
+    "-";
+
+  const getCustomerStatus = (customer) => {
+    if (customer.status != null) {
+      return customer.status;
+    }
+
+    if (customer.active != null) {
+      return customer.active === true ||
+        customer.active === 1 ||
+        customer.active === "1"
+        ? "Active"
+        : "Inactive";
+    }
+
+    return "-";
+  };
 
   return (
     <Box>
       {/* Page Header */}
-
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           mb: 3,
+          gap: 2,
         }}
       >
         <Box>
@@ -99,20 +170,21 @@ function CustomersList() {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={()=>navigate("/customers/add")}
+          onClick={() => navigate("/customers/add")}
         >
           Add Customer
         </Button>
       </Box>
 
       {/* Search */}
-
       <Paper sx={{ p: 2, mb: 3 }}>
         <TextField
           fullWidth
-          placeholder="Search customer by name, email or customer ID"
+          placeholder="Search by customer ID, name, email or phone"
           variant="outlined"
           size="small"
+          value={keyword}
+          onChange={(event) => setKeyword(event.target.value)}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -123,11 +195,16 @@ function CustomersList() {
         />
       </Paper>
 
-      {/* Customer Table */}
+      {/* Error Message */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
+      {/* Customer Table */}
       <TableContainer component={Paper}>
         <Table>
-
           <TableHead>
             <TableRow>
               <TableCell>
@@ -161,76 +238,122 @@ function CustomersList() {
           </TableHead>
 
           <TableBody>
-
-            {customers.map((customer) => (
-              <TableRow key={customer.id} hover>
-
-                <TableCell>
-                  {customer.id}
-                </TableCell>
-
-                <TableCell>
-                  <Typography fontWeight="500">
-                    {customer.name}
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center" sx={{ py: 5 }}>
+                  <CircularProgress size={28} />
+                  <Typography sx={{ mt: 1 }}>
+                    Loading customers...
                   </Typography>
                 </TableCell>
-
-                <TableCell>
-                  {customer.email}
-                </TableCell>
-
-                <TableCell>
-                  {customer.phone}
-                </TableCell>
-
-                <TableCell>
-                  {customer.policy}
-                </TableCell>
-
-                <TableCell>
-                  <Chip
-                    label={customer.status}
-                    color={
-                      customer.status === "Active"
-                        ? "success"
-                        : "default"
-                    }
-                    size="small"
-                  />
-                </TableCell>
-
-                <TableCell align="center">
-
-                  <IconButton
-                    color="primary"
-                    size="small"
-                    onClick={() => navigate(`/customers/${customer.id}`)}
-                  >
-                    <VisibilityIcon />
-                  </IconButton>
-
-                  <IconButton
-                    color="primary"
-                    size="small"
-                    onClick={() => navigate(`/customers/edit/${customer.id}`)}
-                  >
-                    <EditIcon />
-                  </IconButton>
-
-                  <IconButton
-                    color="error"
-                    size="small"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-
-                </TableCell>
-
               </TableRow>
-            ))}
+            ) : filteredCustomers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                  {error
+                    ? "Customers could not be loaded."
+                    : "No customers found."}
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredCustomers.map((customer, index) => {
+                const customerId =
+                  customer.id ?? customer.customerId ?? customer.customer_id;
 
+                const status = getCustomerStatus(customer);
+
+                return (
+                  <TableRow
+                    key={customerId ?? getCustomerCode(customer) ?? index}
+                    hover
+                  >
+                    <TableCell>
+                      {getCustomerCode(customer)}
+                    </TableCell>
+
+                    <TableCell>
+                      <Typography fontWeight={500}>
+                        {getCustomerName(customer)}
+                      </Typography>
+                    </TableCell>
+
+                    <TableCell>
+                      {customer.email ?? "-"}
+                    </TableCell>
+
+                    <TableCell>
+                      {getCustomerPhone(customer)}
+                    </TableCell>
+
+                    <TableCell>
+                      {customer.policy ??
+                        customer.policyName ??
+                        customer.policy_name ??
+                        "-"}
+                    </TableCell>
+
+                    <TableCell>
+                      <Chip
+                        label={status}
+                        color={
+                          status === "Active"
+                            ? "success"
+                            : status === "Inactive"
+                              ? "default"
+                              : "primary"
+                        }
+                        size="small"
+                      />
+                    </TableCell>
+
+                    <TableCell align="center">
+                      <IconButton
+                        color="primary"
+                        size="small"
+                        aria-label="View customer"
+                        disabled={customerId == null}
+                        onClick={() =>
+                          navigate(`/customers/${customerId}`)
+                        }
+                      >
+                        <VisibilityIcon />
+                      </IconButton>
+
+                      <IconButton
+                        color="primary"
+                        size="small"
+                        aria-label="Edit customer"
+                        disabled={customerId == null}
+                        onClick={() =>
+                          navigate(`/customers/edit/${customerId}`)
+                        }
+                      >
+                        <EditIcon />
+                      </IconButton>
+
+                      <IconButton
+                        color="error"
+                        size="small"
+                        aria-label="Delete customer"
+                        onClick={() => {
+                          if (customerId == null) {
+                            window.alert(
+                              "Customer ID is not available."
+                            );
+                            return;
+                          }
+
+                          navigate(`/customers/delete/${customerId}`);
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
-
         </Table>
       </TableContainer>
     </Box>

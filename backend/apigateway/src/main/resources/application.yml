@@ -1,5 +1,5 @@
 server:
-  port: 9092
+  port: 8080
 
 spring:
   application:
@@ -8,12 +8,32 @@ spring:
   cloud:
     gateway:
       server:
-        webmvc:
+        webflux:
+          # Global CORS Configuration
+          globalcors:
+            add-to-simple-url-handler-mapping: true
+            cors-configurations:
+              '[/**]':
+                allowedOriginPatterns:
+                  - "http://localhost:5173"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - PATCH
+                  - OPTIONS
+                allowedHeaders:
+                  - "*"
+                allowCredentials: true
+                maxAge: 3600
+
+          # Route Configuration
           routes:
             - id: customer-service
               uri: lb://customer-service
               predicates:
-                - Path=/api/v1/customers,/api/v1/customers/**
+                - Path=/api/v1/customers/**
 
 eureka:
   client:
